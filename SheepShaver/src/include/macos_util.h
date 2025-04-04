@@ -313,7 +313,7 @@ struct RoutineRecord {
 	int8 							reserved1;					/* Must be 0 */
 	ISAType 						ISA;						/* Instruction Set Architecture */
 	RoutineFlagsType 				routineFlags;				/* Flags for each routine */
-	ProcPtr 						procDescriptor;				/* Where is the thing we’re calling? */
+	ProcPtr 						procDescriptor;				/* Where is the thing we're calling? */
 	uint32 							reserved2;					/* Must be 0 */
 	uint32 							selector;					/* For dispatched routines, the selector */
 };
@@ -364,6 +364,10 @@ extern void Mac_sysfree(uint32 addr);					// Release block occupied by the nonre
 
 // Construct four-character-code from string
 #define FOURCC(a,b,c,d) (((uint32)(a) << 24) | ((uint32)(b) << 16) | ((uint32)(c) << 8) | (uint32)(d))
+
+// Convert a uint32 FOURCC code to a null-terminated string
+#define FOURCCstr(code) \
+    ((char[5]){(char)((code) >> 24), (char)((code) >> 16 & 0xFF), (char)((code) >> 8 & 0xFF), (char)((code) & 0xFF), '\0'})
 
 // Emulator identification codes (4 and 2 characters)
 const uint32 EMULATOR_ID_4 = 0x62616168;			// 'baah'

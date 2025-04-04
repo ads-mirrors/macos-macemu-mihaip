@@ -236,3 +236,64 @@ const char *macroman_to_utf8(const char *macroman, size_t macroman_len) {
 
 	return utf8;
 }
+
+const char *utf8_to_macjapanese(const char *utf8, size_t len) {
+    // MacJapanese is pretty close to Shift_JIS, and only the latter is supported
+    // by the version of iconv we have in Emscripten.
+    iconv_t iconv_cd = iconv_open("SHIFT_JIS", "UTF-8");
+    if (iconv_cd == (iconv_t)-1) {
+		perror("Could not get UTF-8 -> SHIFT_JIS conversion descriptor");
+        return utf8;
+    }
+
+    size_t utf8_len = len;
+    size_t macjapanese_len = len * 3; // upper bound
+    char *macjapanese = (char *)malloc(macjapanese_len + 1);
+
+    char *utf8_in = const_cast<char *>(utf8);
+    char *macjapanese_out = macjapanese;
+    size_t macjapanese_out_len = macjapanese_len;
+
+    if (iconv(iconv_cd, &utf8_in, &utf8_len, &macjapanese_out, &macjapanese_out_len) == (size_t)-1) {
+        perror("iconv could not run UTF-8 -> SHIFT_JIS conversion");
+        free(macjapanese);
+        iconv_close(iconv_cd);
+        return utf8;
+    }
+
+    *macjapanese_out = '\0';
+    iconv_close(iconv_cd);
+    return macjapanese;
+}
+
+const char *macjapanese_to_utf8(const char *macjapanese, size_t len) {
+    // MacJapanese is pretty close to Shift_JIS, and only the latter is supported
+    // by the version of iconv we have in Emscripten.
+    iconv_t iconv_cd = iconv_open("UTF-8", "SHIFT_JIS");
+    if (iconv_cd == (iconv_t)-1) {
+		printf("Could not get SHIFT_JIS -> UTF-8 conversion descriptor\n");
+        return macjapanese;
+    }
+
+    char *macjapanese_in = const_cast<char *>(macjapanese);
+    size_t macjapanese_in_len = len;
+    size_t utf8_len = len * 3; // upper bound
+    char *utf8 = (char *)malloc(utf8_len + 1);
+    size_t utf8_out_len = utf8_len;
+	char *utf8_out = utf8;
+    if (iconv(iconv_cd, &macjapanese_in, &macjapanese_in_len, &utf8_out, &utf8_out_len) == (size_t)-1) {
+        perror("iconv");
+		printf("Could not run SHIFT_JIS -> UTF-8 conversion for input of length %zu:", len);
+        for (size_t i = 0; i < len; ++i) {
+            printf(" %02X", (unsigned char)macjapanese[i]);
+        }
+        printf("\n");
+        free(utf8);
+        iconv_close(iconv_cd);
+        return macjapanese;
+    }
+
+    *utf8_out = '\0';
+    iconv_close(iconv_cd);
+    return utf8;
+}

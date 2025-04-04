@@ -270,6 +270,10 @@ extern time_t MacTimeToTime(uint32 t);				// Convert MacOS time to time_t value
 // Construct four-character-code
 #define FOURCC(a,b,c,d) (((uint32)(a) << 24) | ((uint32)(b) << 16) | ((uint32)(c) << 8) | (uint32)(d))
 
+// Convert a uint32 FOURCC code to a null-terminated string
+#define FOURCCstr(code) \
+    ((char[5]){(char)((code) >> 24), (char)((code) >> 16 & 0xFF), (char)((code) >> 8 & 0xFF), (char)((code) & 0xFF), '\0'})
+
 // Emulator identification codes (4 and 2 characters)
 const uint32 EMULATOR_ID_4 = 0x62617369;			// 'basi'
 const uint16 EMULATOR_ID_2 = 0x6261;				// 'ba'

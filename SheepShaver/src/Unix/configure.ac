@@ -630,7 +630,7 @@ SCSISRC=../dummy/scsi_dummy.cpp
 AUDIOSRC=../dummy/audio_dummy.cpp
 PREFSSRC=../dummy/prefs_dummy.cpp
 EXTFSSRC=extfs_unix.cpp
-EXTRASYSSRCS=macroman.cpp
+EXTRASYSSRCS=mac_encodings.cpp
 case "$target_os" in
 linux*)
   ETHERSRC=ether_unix.cpp

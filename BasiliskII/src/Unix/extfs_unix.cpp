@@ -30,7 +30,7 @@
 #include "sysdeps.h"
 #include "extfs.h"
 #include "extfs_defs.h"
-#include "macroman.h"
+#include "mac_encodings.h"
 
 #define DEBUG 0
 #include "debug.h"

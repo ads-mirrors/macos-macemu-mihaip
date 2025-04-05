@@ -431,7 +431,10 @@ void ExtFSInit(void)
 	const char *volume_name = GetString(STR_EXTFS_VOLUME_NAME);
 	p->name = new char[strlen(volume_name) + 1];
 	strcpy(p->name, volume_name);
-	strncpy(p->guest_name, host_encoding_to_macroman(p->name), 32);
+	// Assume that the name is ASCII and thus is representable in MacRoman
+	// (we can't call host_encoding_to_macroman so early because it depends on
+	// the guest OS running).
+	strncpy(p->guest_name, p->name, 32);
 	p->guest_name[31] = 0;
 
 	// Find path for root

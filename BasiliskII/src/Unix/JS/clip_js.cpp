@@ -16,58 +16,6 @@
 // the JS side
 static bool we_put_this_data = false;
 
-// Script Manager constants
-#define smMacSysScript		18
-#define smMacRegionCode		40
-#define verJapan          14
-#define smJapanese		    1
-
-/*
- *	Get current system script encoding on Mac
- */
-
-static int GetMacScriptManagerVariable(uint16_t varID) {
-   int ret = -1;
-   M68kRegisters r;
-   static uint8_t proc[] = {
-     0x59, 0x4f,							// subq.w	 #4,sp
-     0x3f, 0x3c, 0x00, 0x00,				// move.w	 #varID,-(sp)
-     0x2f, 0x3c, 0x84, 0x02, 0x00, 0x08, // move.l	 #-2080243704,-(sp)
-     0xa8, 0xb5,							// ScriptUtil()
-     0x20, 0x1f,							// move.l	 (a7)+,d0
-     M68K_RTS >> 8, M68K_RTS & 0xff
-   };
-   r.d[0] = sizeof(proc);
-   Execute68kTrap(0xa71e, &r);		// NewPtrSysClear()
-   uint32_t proc_area = r.a[0];
-   if (proc_area) {
-     Host2Mac_memcpy(proc_area, proc, sizeof(proc));
-     WriteMacInt16(proc_area + 4, varID);
-     Execute68k(proc_area, &r);
-     ret = r.d[0];
-     r.a[0] = proc_area;
-     Execute68kTrap(0xa01f, &r); // DisposePtr
-   }
-   return ret;
-}
-
-typedef struct {
-  const char *(*utf8_to_mac)(const char *, size_t);
-  const char *(*mac_to_utf8)(const char *, size_t);
-} EncodingFunctions;
-
-static EncodingFunctions getEncodingFunctions() {
-	int script = GetMacScriptManagerVariable(smMacSysScript);
-	int region = GetMacScriptManagerVariable(smMacRegionCode);
-
-  if (script == smJapanese && region == verJapan) {
-    return {utf8_to_macjapanese, macjapanese_to_utf8};
-  }
-
-  // Default to MacRoman
-  return {utf8_to_macroman, macroman_to_utf8};
-}
-
 void ClipInit(void) {
   D(bug("ClipInit\n"));
 }
@@ -98,7 +46,7 @@ void GetScrap(void** handle, uint32 type, int32 offset) {
       }
 
       char* clipboardTextMac =
-          const_cast<char*>(getEncodingFunctions().utf8_to_mac(clipboardTextCstr, strlen(clipboardTextCstr)));
+          const_cast<char*>(get_encoding_functions().utf8_to_mac(clipboardTextCstr, strlen(clipboardTextCstr)));
       free(clipboardTextCstr);
       size_t clipboardTextMacLength = strlen(clipboardTextMac);
       for (int i = 0; i < clipboardTextMacLength; i++) {
@@ -198,7 +146,7 @@ void PutScrap(uint32 type, void* scrap, int32 length) {
   switch (type) {
     case FOURCC('T', 'E', 'X', 'T'):
       EM_ASM_({ workerApi.setClipboardText(UTF8ToString($0)); },
-              getEncodingFunctions().mac_to_utf8((char*)scrap, length));
+              get_encoding_functions().mac_to_utf8((char*)scrap, length));
       break;
     default:
       D(bug("PutScrap: unknown type '%s', ignoring\n", FOURCCstr(type)));

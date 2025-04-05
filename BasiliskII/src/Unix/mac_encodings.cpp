@@ -2,6 +2,10 @@
 #include <map>
 
 #include "sysdeps.h"
+#include "cpu_emulation.h"
+#include "emul_op.h"
+#include "mac_encodings.h"
+#include "main.h"
 
 // From http://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/ROMAN.TXT
 std::map<uint8, uint16> MACROMAN_TO_UNICODE = {
@@ -296,4 +300,53 @@ const char *macjapanese_to_utf8(const char *macjapanese, size_t len) {
     *utf8_out = '\0';
     iconv_close(iconv_cd);
     return utf8;
+}
+
+
+// Script Manager constants
+#define smMacSysScript		18
+#define smMacRegionCode		40
+#define verJapan          14
+#define smJapanese		    1
+
+/*
+ *	Get current system script encoding on Mac
+ */
+
+static int GetMacScriptManagerVariable(uint16_t varID) {
+   int ret = -1;
+   M68kRegisters r;
+   static uint8_t proc[] = {
+     0x59, 0x4f,							// subq.w	 #4,sp
+     0x3f, 0x3c, 0x00, 0x00,				// move.w	 #varID,-(sp)
+     0x2f, 0x3c, 0x84, 0x02, 0x00, 0x08, // move.l	 #-2080243704,-(sp)
+     0xa8, 0xb5,							// ScriptUtil()
+     0x20, 0x1f,							// move.l	 (a7)+,d0
+     M68K_RTS >> 8, M68K_RTS & 0xff
+   };
+   r.d[0] = sizeof(proc);
+   Execute68kTrap(0xa71e, &r);		// NewPtrSysClear()
+   uint32_t proc_area = r.a[0];
+   if (proc_area) {
+     Host2Mac_memcpy(proc_area, proc, sizeof(proc));
+     WriteMacInt16(proc_area + 4, varID);
+     Execute68k(proc_area, &r);
+     ret = r.d[0];
+     r.a[0] = proc_area;
+     Execute68kTrap(0xa01f, &r); // DisposePtr
+   }
+   return ret;
+}
+
+
+EncodingFunctions get_encoding_functions() {
+	int script = GetMacScriptManagerVariable(smMacSysScript);
+	int region = GetMacScriptManagerVariable(smMacRegionCode);
+
+  if (script == smJapanese && region == verJapan) {
+    return {utf8_to_macjapanese, macjapanese_to_utf8};
+  }
+
+  // Default to MacRoman
+  return {utf8_to_macroman, macroman_to_utf8};
 }

@@ -1,5 +1,6 @@
-const char *utf8_to_macroman(const char *utf8, size_t len);
-const char *macroman_to_utf8(const char *macroman, size_t len);
+typedef struct {
+    const char *(*utf8_to_mac)(const char *, size_t);
+    const char *(*mac_to_utf8)(const char *, size_t);
+} EncodingFunctions;
 
-const char *utf8_to_macjapanese(const char *utf8, size_t len);
-const char *macjapanese_to_utf8(const char *macjapanese, size_t len);
+EncodingFunctions get_encoding_functions();

@@ -12,8 +12,8 @@
 
 static bool use_mouse_deltas = false;
 
-void ReadJSInput() {
-  int lock = EM_ASM_INT_V({ return workerApi.acquireInputLock(); });
+void ReadJSInput(int64 instruction_count) {
+  int lock = EM_ASM_DOUBLE({ return workerApi.acquireInputLock($0); }, double(instruction_count));
   if (lock) {
     int mouse_button_state = EM_ASM_INT_V(
         { return workerApi.getInputValue(workerApi.InputBufferAddresses.mouseButtonStateAddr); });

@@ -364,7 +364,7 @@ void idle_wait(void)
 		return workerApi.idleWait();
 	});
 	if (has_input) {
-		ReadJSInput();
+		ReadJSInput(0);
 	}
 #else
 #ifdef IDLE_USES_COND_WAIT

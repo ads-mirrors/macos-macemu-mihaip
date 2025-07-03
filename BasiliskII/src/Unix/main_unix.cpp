@@ -350,7 +350,7 @@ void cpu_do_check_ticks(void)
 #ifdef EMSCRIPTEN
 	static bool js_frequent_read_input = PrefsFindBool("jsfrequentreadinput");
 	if (js_frequent_read_input) {
-		ReadJSInput();
+		ReadJSInput(emulated_ticks_current);
 		AudioRefresh();
 		CheckJSTimer();
 	}
@@ -377,7 +377,7 @@ void cpu_do_check_ticks(void)
 	if (next < now) {
 #ifdef EMSCRIPTEN
 		if (!js_frequent_read_input) {
-			ReadJSInput();
+			ReadJSInput(emulated_ticks_current);
 			AudioRefresh();
 			CheckJSTimer();
 		}

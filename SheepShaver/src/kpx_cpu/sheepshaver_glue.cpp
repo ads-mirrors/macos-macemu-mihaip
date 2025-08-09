@@ -974,7 +974,7 @@ void CheckTicks()
 	static uint64 next_tick_usecs = GetTicks_usec() + 16625;
 	static uint64 tick_counter = 0;
 	if (js_frequent_read_input) {
-		ReadJSInput();
+		ReadJSInput(0);
 		AudioRefresh();
 		CheckJSTimer();
 	}
@@ -983,7 +983,7 @@ void CheckTicks()
 	if (tick_usecs >= next_tick_usecs)
 	{
 		if (!js_frequent_read_input) {
-			ReadJSInput();
+			ReadJSInput(0);
 			AudioRefresh();
 			CheckJSTimer();
 		}
